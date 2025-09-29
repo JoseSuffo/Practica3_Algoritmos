@@ -12,7 +12,7 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/vistas/menu.fxml"));
         Scene scene = new Scene(root);
         stage.setScene(scene);
-        stage.setTitle("Costco Guasave");
+        stage.setTitle("Costco Mexicali");
         stage.show();
     }
 
