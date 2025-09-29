@@ -11,8 +11,8 @@
          <image>
             <Image url="@../imagenes/fondoP3.png" />
          </image></ImageView>
-      <Button layoutX="111.0" layoutY="255.0" mnemonicParsing="false" text="Comenzar simulación" />
-      <Button layoutX="284.0" layoutY="255.0" mnemonicParsing="false" text="Creditos" />
-      <Button layoutX="385.0" layoutY="255.0" mnemonicParsing="false" text="Salir" />
+      <Button layoutX="111.0" layoutY="255.0" mnemonicParsing="false" text="Comenzar simulación" onAction="#botonSimular" />
+      <Button layoutX="284.0" layoutY="255.0" mnemonicParsing="false" text="Creditos" onAction="#botonCreditos"/>
+      <Button layoutX="385.0" layoutY="255.0" mnemonicParsing="false" text="Salir" onAction="#botonSalir"/>
    </children>
 </AnchorPane>
