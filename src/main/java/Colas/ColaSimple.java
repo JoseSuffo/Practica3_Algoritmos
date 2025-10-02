@@ -2,7 +2,7 @@ package Colas;
 
 public class ColaSimple <T>{
     private int inicio, fin, max;
-    private final T[] colaSimple;
+    private T[] colaSimple;
 
     public ColaSimple(){
         inicio = -1;
@@ -53,5 +53,18 @@ public class ColaSimple <T>{
             System.out.println("Cola Vacía");
             return null;
         }
+    }
+
+    public int getTamano(){
+        if(inicio == -1){
+            return 0;
+        }
+        return fin-inicio+1;
+    }
+
+    public void clear(){
+        inicio = -1;
+        fin = -1;
+        colaSimple = (T[]) new Object[max];
     }
 }

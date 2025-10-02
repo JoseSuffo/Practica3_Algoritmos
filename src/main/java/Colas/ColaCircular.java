@@ -61,4 +61,17 @@ public class ColaCircular <T> {
             return colaCircular[inicio];
         }
     }
+
+    public int getTamano(){
+        if(inicio == -1){
+            return 0;
+        }
+        return fin-inicio+1;
+    }
+
+    public void clear(){
+        inicio = -1;
+        fin = -1;
+        colaCircular = (T[]) new Object[max];
+    }
 }

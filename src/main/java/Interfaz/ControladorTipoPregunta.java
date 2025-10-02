@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -19,12 +20,36 @@ public class ControladorTipoPregunta {
 
     @FXML
     public void filaUnica(ActionEvent event) {
+        BorderPane principal = new BorderPane();
+        ControladorSimulacion controlador = new ControladorSimulacion("Unica",principal);
 
+        Scene simulador = new Scene(principal, 1200,600);
+        Stage stage = new Stage();
+        stage.setScene(simulador);
+        stage.setResizable(false);
+        stage.setTitle("Simulador de cajas con fila única. Costco Mexicali");
+        stage.show();
+
+        Node node = (Node) event.getSource();
+        Stage actualStage = (Stage) node.getScene().getWindow();
+        actualStage.close();
     }
 
     @FXML
     public void filasMultiples(ActionEvent event) {
+        BorderPane principal = new BorderPane();
+        ControladorSimulacion controlador = new ControladorSimulacion("Multiples", principal);
 
+        Scene simulador = new Scene(principal, 1200,600);
+        Stage stage = new Stage();
+        stage.setScene(simulador);
+        stage.setResizable(false);
+        stage.setTitle("Simulador de cajas con filas multiples. Costco Mexicali");
+        stage.show();
+
+        Node node = (Node) event.getSource();
+        Stage actualStage = (Stage) node.getScene().getWindow();
+        actualStage.close();
     }
 
     @FXML
