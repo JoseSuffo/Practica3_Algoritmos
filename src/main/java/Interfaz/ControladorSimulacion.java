@@ -9,6 +9,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -19,6 +20,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.awt.*;
 import java.io.IOException;
 
 public class ControladorSimulacion {
@@ -39,7 +41,11 @@ public class ControladorSimulacion {
     }
 
     public void crearInterfaz(){
-        principal.setStyle("-fx-background-color: #f0f0f0;");
+        if(tipoSimulacion.equals("Unica")){
+            principal.setStyle("-fx-background-color: linear-gradient(to bottom, #a0c4ff, #003566);");
+        }else{
+            principal.setStyle("-fx-background-color: linear-gradient(to bottom, #fff9b0, #fca311);");
+        }
         botonCancelaryVolver.setOnAction(e -> {
             Parent root = null;
             try {
@@ -58,12 +64,13 @@ public class ControladorSimulacion {
             actual.close();
         });
         etiquetaTiempo.setText("Tiempo: " + simulacion.getTiempo());
+        etiquetaTiempo.setStyle("-fx-text-fill: white;");
         VBox filaInferior = new VBox(8);
         filaInferior.setAlignment(Pos.CENTER);
         filaInferior.setAlignment(Pos.CENTER);
         filaInferior.getChildren().addAll(etiquetaTiempo, botonCancelaryVolver);
         principal.setBottom(filaInferior);
-        principal.setTop(cajas);
+        principal.setCenter(cajas);
         mostrarCajas();
     }
 
@@ -83,9 +90,9 @@ public class ControladorSimulacion {
                     ))
             );
             imagenCaja.setFitWidth(60);
-            imagenCaja.setFitHeight(60);
-
+            imagenCaja.setFitHeight(100);
             cajaVisual.getChildren().addAll(titulo, imagenCaja, estado, clientes);
+            cajas.setAlignment(Pos.CENTER);
             cajas.getChildren().add(cajaVisual);
         }
     }
@@ -96,11 +103,24 @@ public class ControladorSimulacion {
     }
 
     public void comenzarSimulacion() {
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), e -> {
-            simulacion.flujoSimulacion();
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> {
+            boolean continuar = simulacion.simularMinuto();
             actualizarVista();
+            if (!continuar) {
+                ((Timeline) e.getSource()).stop();
+                mostrarResumenFinal();
+            }
         }));
-        timeline.setCycleCount(600);
+        timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
     }
+
+    public void mostrarResumenFinal() {
+        Alert resumen = new Alert(Alert.AlertType.INFORMATION);
+        resumen.setTitle("Resumen de Simulación");
+        resumen.setHeaderText("Modo: " + tipoSimulacion);
+        resumen.setContentText(simulacion.getResumenEstadisticas());
+        resumen.show();
+    }
+
 }

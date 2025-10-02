@@ -20,11 +20,11 @@ public class ColaSimple <T>{
 
     public void insertarDato(T dato){
         if(fin<max-1){
-            fin++;
-            colaSimple[fin] = dato;
             if(fin==-1){
                 inicio=0;
             }
+            fin++;
+            colaSimple[fin] = dato;
         }else{
             System.out.println("Desbordamiento");
         }
@@ -62,9 +62,13 @@ public class ColaSimple <T>{
         return fin-inicio+1;
     }
 
-    public void clear(){
+    public void clear() {
         inicio = -1;
         fin = -1;
         colaSimple = (T[]) new Object[max];
+    }
+
+    public boolean estaVacia(){
+        return fin == max-1;
     }
 }

@@ -2,59 +2,82 @@ package Costco;
 
 import Colas.ColaSimple;
 
-
 public class Caja {
-    private ColaSimple<Cliente> cola;
-    private int clientesMaximos, numCaja, clientesAtendidos, tiempoAtencion;
+    private ColaSimple<Cliente> filaInterna = new ColaSimple<>(100); // capacidad arbitraria
+    private Cliente clienteActual;
+    private int tiempoRestante;
+
+    private int numCaja;
+    private int clientesAtendidos;
+    private int tiempoAtencion;
     private boolean abierta;
+    public int tiempoAbierta;
 
     public Caja(int numCaja) {
-        cola  = new ColaSimple<>();
-        clientesMaximos = 4;
         this.numCaja = numCaja;
+        this.abierta = false;
     }
 
-    public void agregarCliente(Cliente cliente) {
-        cola.insertarDato(cliente);
+    public void agregarCliente(Cliente c) {
+        filaInterna.insertarDato(c);
     }
 
-    public Cliente quitarCliente() {
-        return cola.eliminarDato();
+    public Cliente atender(int minuto) {
+        if (clienteActual == null && !filaInterna.estaVacia()) {
+            clienteActual = filaInterna.eliminarDato();
+            tiempoRestante = clienteActual.getTiempoPagoTotal();
+            clienteActual.setTiempoInicioPago(minuto);
+        }
+
+        if (clienteActual != null) {
+            tiempoRestante--;
+            if (tiempoRestante <= 0) {
+                clienteActual.setTiempoSalida(minuto);
+                registrarClienteAtendido();
+                registrarTiempoAtencion(clienteActual.getTiempoPagoTotal());
+                Cliente atendido = clienteActual;
+                clienteActual = null;
+                return atendido;
+            }
+        }
+        return null;
     }
 
-    public int getNumCaja(){
+    public int getNumClientes() {
+        return filaInterna.getTamano() + (clienteActual != null ? 1 : 0);
+    }
+
+    public int getNumCaja() {
         return numCaja;
     }
 
-    public int getNumClientes(){
-        return cola.getTamano();
-    }
-
-    public void registrarClienteAtendido(){
+    public void registrarClienteAtendido() {
         clientesAtendidos++;
     }
 
-    public void registrarTiempoAtencion(int minutos){
-        tiempoAtencion+=minutos;
+    public void registrarTiempoAtencion(int minutos) {
+        tiempoAtencion += minutos;
     }
 
-    public boolean cajaAbierta(){
+    public boolean cajaAbierta() {
         return abierta;
     }
 
-    public void abrirCaja(){
+    public void abrirCaja() {
         abierta = true;
     }
 
-    public void cerrarCaja(){
+    public void cerrarCaja() {
         abierta = false;
     }
 
-    public int getTiempoAtencion(){
-        return tiempoAtencion;
+    public void incrementarTiempoAbierta(){
+        if(abierta){
+            tiempoAbierta++;
+        }
     }
 
-    public int getClientesAtendidos(){
-        return clientesAtendidos;
+    public int getTiempoAbierta() {
+        return tiempoAbierta;
     }
 }

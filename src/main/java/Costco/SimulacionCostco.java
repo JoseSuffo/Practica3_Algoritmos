@@ -10,8 +10,10 @@ public class SimulacionCostco {
     private ArrayList<Cliente> clientesAtendidos;
     private ColaSimple<Cliente> filaUnica = new ColaSimple<>(1000);
     private int minutoActual=0;
-    private int llegadas=0;
     private String modoFila;
+    private Random random = new Random();
+    private int tiempoProximaLlegada = 0;
+    private int[] inactividad = new int[12];
 
     public SimulacionCostco(String modoFila) {
         cajas = new ArrayList<>();
@@ -19,46 +21,30 @@ public class SimulacionCostco {
         this.modoFila = modoFila;
         for(int i = 0; i < 12; i++){
             Caja c = new Caja(i+1);
+            if(i==0){
+               c.abrirCaja();
+            }
             cajas.add(c);
         }
     }
 
-    public void flujoSimulacion(){
-        for (minutoActual = 0; minutoActual < 600; minutoActual++) { // 10 horas * 60 minutos
+    public boolean simularMinuto() {
+        if (minutoActual < 600) {
+            for (Caja c : cajas) {
+                if (c.cajaAbierta()) c.incrementarTiempoAbierta();
+            }
             generarCliente(minutoActual);
             generarPagos(minutoActual);
             abrirCajaNueva();
             cerrarCajasVacia();
             recolectarEstadisticas();
-        }
-    }
-
-    public void agregarCliente(Cliente cliente, int caja) {
-        for (Caja c : cajas) {
-            if (c.getNumCaja() == caja) {
-                c.agregarCliente(cliente);
-            }
-        }
-    }
-
-    public void eliminarCliente(int caja) {
-        for (Caja c : cajas) {
-            if (c.getNumCaja() == caja) {
-                c.quitarCliente();
-            }
-        }
-    }
-
-    public boolean comprobarClientesEnCaja(int caja){
-        for (Caja c : cajas) {
-            if (c.getNumCaja() == caja && c.getNumClientes()>5) {
-                return true;
-            }
+            minutoActual++;
+            return true;
         }
         return false;
     }
 
-    public Caja obtenerMejorCajaDisponible(int caja){
+    public Caja obtenerMejorCajaDisponible(){
         Caja seleccion = null;
         int clientesMinimos = Integer.MAX_VALUE;
         for (Caja c : cajas) {
@@ -70,18 +56,15 @@ public class SimulacionCostco {
         return seleccion;
     }
 
-    public void abrirCajaNueva(){
-        boolean llenoTotal = true;
+    public void abrirCajaNueva() {
+        int totalClientes = cajas.stream()
+                .filter(Caja::cajaAbierta)
+                .mapToInt(Caja::getNumClientes)
+                .sum();
 
-        for (Caja c : cajas) {
-            if(c.cajaAbierta() && c.getNumClientes() < 4){
-                llenoTotal = false;
-                break;
-            }
-        }
-        if(llenoTotal){
-            for(Caja c : cajas){
-                if(!c.cajaAbierta()){
+        if (totalClientes >= cajas.size() * 4) {
+            for (Caja c : cajas) {
+                if (!c.cajaAbierta()) {
                     c.abrirCaja();
                     break;
                 }
@@ -90,15 +73,20 @@ public class SimulacionCostco {
     }
 
     public void cerrarCajasVacia(){
-        for (Caja c : cajas) {
-            if(c.cajaAbierta() && c.getNumClientes() == 0){
-                c.cerrarCaja();
+        for (int i = 0; i < cajas.size(); i++) {
+            Caja c = cajas.get(i);
+            if (c.cajaAbierta()) {
+                if (c.getNumClientes() == 0) {
+                    inactividad[i]++;
+                    if (inactividad[i] >= 5) { // espera 5 minutos sin clientes
+                        c.cerrarCaja();
+                        inactividad[i] = 0;
+                    }
+                } else {
+                    inactividad[i] = 0;
+                }
             }
         }
-    }
-
-    public int getMinutoActual(){
-        return minutoActual;
     }
 
     public String getTiempo(){
@@ -108,44 +96,34 @@ public class SimulacionCostco {
     }
 
     public void generarCliente(int minuto){
-        llegadas++;
-        if(llegadas>= new Random().nextInt(1,3)){
+        if (minuto >= tiempoProximaLlegada) {
             Cliente nuevoCliente = new Cliente();
             nuevoCliente.setTiempoLlegada(minuto);
+            nuevoCliente.setTiempoPagoTotal(3 + random.nextInt(3)); // 3 a 5 min
             if(modoFila.equals("Unica")){
                 filaUnica.insertarDato(nuevoCliente);
             }else{
-                Caja caja = obtenerMejorCajaDisponible(0);
-                if(caja!=null){
-                    caja.agregarCliente(nuevoCliente);
-                }
+                Caja caja = obtenerMejorCajaDisponible();
+                if(caja!=null) caja.agregarCliente(nuevoCliente);
             }
-            llegadas = 0;
+            // próxima llegada entre 1 y 2 minuto
+            tiempoProximaLlegada = minuto + (1 + random.nextInt(2));
         }
     }
 
-    public void generarPagos(int minuto){
-        if(modoFila.equals("Unica")){
-            for(Caja c : cajas){
-                if(c.cajaAbierta() && c.getNumClientes()<2 && filaUnica.getTamano()>0){
+    public void generarPagos(int minuto) {
+        for (Caja c : cajas) {
+            if (c.cajaAbierta()) {
+                // En modo fila única, primero asigna cliente si hay espacio
+                if (modoFila.equals("Unica") && c.getNumClientes() < 4 && filaUnica.getTamano() > 0) {
                     Cliente cliente = filaUnica.eliminarDato();
-                    cliente.setTiempoInicioPago(minuto);
-                    cliente.setTiempoSalida(minuto+cliente.getTiempoPagoTotal());
                     c.agregarCliente(cliente);
-                    c.registrarClienteAtendido();
-                    c.registrarTiempoAtencion(cliente.getTiempoPagoTotal());
-                    clientesAtendidos.add(cliente);
                 }
-            }
-        }else{
-            for(Caja c : cajas){
-                if(c.cajaAbierta() && c.getNumClientes() > 0){
-                    Cliente cliente = c.quitarCliente();
-                    cliente.setTiempoInicioPago(minuto);
-                    cliente.setTiempoSalida(minuto+cliente.getTiempoPagoTotal());
-                    c.registrarClienteAtendido();
-                    c.registrarTiempoAtencion(cliente.getTiempoPagoTotal());
-                    clientesAtendidos.add(cliente);
+
+                // Luego atiende al cliente actual si hay uno
+                Cliente atendido = c.atender(minuto);
+                if (atendido != null) {
+                    clientesAtendidos.add(atendido);
                 }
             }
         }
@@ -170,6 +148,28 @@ public class SimulacionCostco {
             System.out.println("Promedio total en sistema: " + (sumaTotal / totalClientes) + " min");
         }
     }
+
+    public String getResumenEstadisticas() {
+        int totalClientes = clientesAtendidos.size();
+        int sumaEspera = 0, sumaPago = 0, sumaTotal = 0;
+
+        for (Cliente c : clientesAtendidos) {
+            sumaEspera += c.getTiempoEsperaTotal();
+            sumaPago += c.getTiempoPagoTotal();
+            sumaTotal += c.getTiempoTotalEnSistema();
+        }
+
+        if (totalClientes == 0) return "No se atendieron clientes.";
+
+        return String.format(
+                "Clientes atendidos: %d\nPromedio espera: %d min\nPromedio pago: %d min\nPromedio total en sistema: %d min",
+                totalClientes,
+                sumaEspera / totalClientes,
+                sumaPago / totalClientes,
+                sumaTotal / totalClientes
+        );
+    }
+
 
     public ArrayList<Caja>getCajas(){
         return cajas;
