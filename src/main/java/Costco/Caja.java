@@ -77,7 +77,11 @@ public class Caja {
         }
     }
 
-    public int getTiempoAbierta() {
+    public int getTiempoAbierta(){
         return tiempoAbierta;
+    }
+
+    public int getClientesAtendidos() {
+        return clientesAtendidos;
     }
 }

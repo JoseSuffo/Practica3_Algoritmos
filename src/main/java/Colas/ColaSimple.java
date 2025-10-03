@@ -46,15 +46,6 @@ public class ColaSimple <T>{
         }
     }
 
-    public T verProximo(){
-        if(inicio!=-1){
-            return colaSimple[inicio];
-        }else{
-            System.out.println("Cola Vacía");
-            return null;
-        }
-    }
-
     public int getTamano(){
         if(inicio == -1){
             return 0;

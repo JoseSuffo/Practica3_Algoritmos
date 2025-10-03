@@ -109,16 +109,25 @@ public class SimulacionCostco {
 
     public void generarCliente(int minuto){
         if (minuto >= tiempoProximaLlegada) {
-            Cliente nuevoCliente = new Cliente();
-            nuevoCliente.setTiempoLlegada(minuto);
-            nuevoCliente.setTiempoPagoTotal(3 + random.nextInt(3));
-            if(modoFila.equals("Unica")){
-                filaUnica.insertarDato(nuevoCliente);
-            }else{
-                Caja caja = obtenerMejorCajaDisponible();
-                if(caja!=null) caja.agregarCliente(nuevoCliente);
+            int cantidad = 2 + random.nextInt(3);
+
+            for (int i = 0; i < cantidad; i++) {
+                Cliente nuevoCliente = new Cliente();
+                nuevoCliente.setTiempoLlegada(minuto);
+                nuevoCliente.setTiempoPagoTotal(3 + random.nextInt(3));
+
+                if (modoFila.equals("Unica")) {
+                    filaUnica.insertarDato(nuevoCliente);
+                } else {
+                    Caja caja = obtenerMejorCajaDisponible();
+                    if (caja != null) caja.agregarCliente(nuevoCliente);
+                }
             }
-            tiempoProximaLlegada = minuto + (1 + random.nextInt(2));
+            if (random.nextBoolean()) {
+                tiempoProximaLlegada = minuto + 1;
+            } else {
+                tiempoProximaLlegada = minuto;
+            }
         }
     }
 
@@ -160,6 +169,7 @@ public class SimulacionCostco {
     public String getResumenEstadisticas() {
         int totalClientes = clientesAtendidos.size();
         int sumaEspera = 0, sumaPago = 0, sumaTotal = 0;
+        StringBuilder resumen = new StringBuilder();
 
         for (Cliente c : clientesAtendidos) {
             sumaEspera += c.getTiempoEsperaTotal();
@@ -169,13 +179,28 @@ public class SimulacionCostco {
 
         if (totalClientes == 0) return "No se atendieron clientes.";
 
-        return String.format(
-                "Clientes atendidos: %d\nPromedio espera: %d min\nPromedio pago: %d min\nPromedio total en sistema: %d min",
+        resumen.append(String.format(
+                "Clientes atendidos: %d\nPromedio espera: %d min\nPromedio pago: %d min\nPromedio total en sistema: %d min\n\n",
                 totalClientes,
                 sumaEspera / totalClientes,
                 sumaPago / totalClientes,
                 sumaTotal / totalClientes
-        );
+        ));
+
+        resumen.append("=== Estadísticas por Caja ===\n");
+        for (Caja c : cajas) {
+            int tiempoAbierta = c.getTiempoAbierta();
+            int horas=tiempoAbierta/60;
+            int minutos=tiempoAbierta%60;
+                    resumen.append(String.format(
+                    "Caja %d -> Clientes: %d, Tiempo abierta: %02d:%02d\n",
+                    c.getNumCaja(),
+                    c.getClientesAtendidos(),
+                    horas, minutos
+            ));
+        }
+
+        return resumen.toString();
     }
 
     public ArrayList<Caja>getCajas(){

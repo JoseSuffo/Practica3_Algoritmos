@@ -4,6 +4,7 @@ import Costco.Caja;
 import Costco.SimulacionCostco;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -20,6 +21,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
@@ -32,6 +34,7 @@ public class ControladorSimulacion {
     private Button botonCancelaryVolver = new Button("Cancelar y Volver");
     private Label etiquetaTiempo = new Label();
     private Label filaUnica = new Label();
+    private Timeline timeline = new Timeline();
 
     public ControladorSimulacion(String tipoSimulacion, BorderPane principal) {
         this.tipoSimulacion = tipoSimulacion;
@@ -48,21 +51,10 @@ public class ControladorSimulacion {
             principal.setStyle("-fx-background-color: linear-gradient(to bottom, #fff9b0, #fca311);");
         }
         botonCancelaryVolver.setOnAction(e -> {
-            Parent root = null;
-            try {
-                root = FXMLLoader.load(getClass().getResource("/vistas/menu.fxml"));
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
+            if(timeline!=null){
+                timeline.stop();
             }
-            Scene scene = new Scene(root);
-            Stage newStage = new Stage();
-            newStage.setScene(scene);
-            newStage.setTitle("Costco Mexicali");
-            newStage.show();
-
-            Node node = (Node) e.getSource();
-            Stage actual = (Stage) node.getScene().getWindow();
-            actual.close();
+            volverAlMenu();
         });
         VBox filaInferior = new VBox(8);
         etiquetaTiempo.setText("Tiempo: " + simulacion.getTiempo());
@@ -89,6 +81,10 @@ public class ControladorSimulacion {
             Label titulo = new Label("Caja " + caja.getNumCaja());
             Label estado = new Label(caja.cajaAbierta() ? "Abierta" : "Cerrada");
             Label clientes = new Label("Clientes: " + caja.getNumClientes());
+            int tiempoAbiertaInt = caja.getTiempoAbierta();
+            int horas=tiempoAbiertaInt/60;
+            int minutos=tiempoAbiertaInt%60;
+            Label tiempoAbierta = new Label("Tiempo \nabierta:\n "+String.format("%02d:%02d", horas, minutos));
 
             ImageView imagenCaja = new ImageView(
                     new Image(getClass().getResourceAsStream(
@@ -97,7 +93,7 @@ public class ControladorSimulacion {
             );
             imagenCaja.setFitWidth(60);
             imagenCaja.setFitHeight(100);
-            cajaVisual.getChildren().addAll(titulo, imagenCaja, estado, clientes);
+            cajaVisual.getChildren().addAll(titulo, imagenCaja, estado, clientes, tiempoAbierta);
             cajas.setAlignment(Pos.CENTER);
             cajas.getChildren().add(cajaVisual);
         }
@@ -112,13 +108,13 @@ public class ControladorSimulacion {
     }
 
     public void comenzarSimulacion() {
-        Timeline timeline = new Timeline();
         KeyFrame frame = new KeyFrame(Duration.millis(100), e -> {
             boolean continuar = simulacion.simularMinuto();
             actualizarVista();
             if (!continuar) {
                 timeline.stop();
                 mostrarResumenFinal();
+                volverAlMenu();
             }
         });
         timeline.getKeyFrames().add(frame);
@@ -132,5 +128,21 @@ public class ControladorSimulacion {
         resumen.setHeaderText("Modo: " + tipoSimulacion);
         resumen.setContentText(simulacion.getResumenEstadisticas());
         resumen.show();
+    }
+
+    private void volverAlMenu() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/vistas/menu.fxml"));
+            Scene scene = new Scene(root);
+            Stage newStage = new Stage();
+            newStage.setScene(scene);
+            newStage.setTitle("Costco Mexicali");
+            newStage.show();
+
+            Stage actual = (Stage) principal.getScene().getWindow();
+            actual.close();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
