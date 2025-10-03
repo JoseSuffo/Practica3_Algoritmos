@@ -31,6 +31,7 @@ public class ControladorSimulacion {
     private HBox cajas = new HBox(16);
     private Button botonCancelaryVolver = new Button("Cancelar y Volver");
     private Label etiquetaTiempo = new Label();
+    private Label filaUnica = new Label();
 
     public ControladorSimulacion(String tipoSimulacion, BorderPane principal) {
         this.tipoSimulacion = tipoSimulacion;
@@ -63,9 +64,14 @@ public class ControladorSimulacion {
             Stage actual = (Stage) node.getScene().getWindow();
             actual.close();
         });
+        VBox filaInferior = new VBox(8);
         etiquetaTiempo.setText("Tiempo: " + simulacion.getTiempo());
         etiquetaTiempo.setStyle("-fx-text-fill: white;");
-        VBox filaInferior = new VBox(8);
+        if(tipoSimulacion.equals("Unica")){
+            filaUnica.setText("Fila única: " + simulacion.getTamanoFilaUnica());
+            filaUnica.setStyle("-fx-text-fill: white;");
+            filaInferior.getChildren().add(filaUnica);
+        }
         filaInferior.setAlignment(Pos.CENTER);
         filaInferior.setAlignment(Pos.CENTER);
         filaInferior.getChildren().addAll(etiquetaTiempo, botonCancelaryVolver);
@@ -99,18 +105,23 @@ public class ControladorSimulacion {
 
     public void actualizarVista() {
         etiquetaTiempo.setText("Tiempo: " + simulacion.getTiempo());
+        if(tipoSimulacion.equals("Unica")){
+            filaUnica.setText("Fila: " + simulacion.getTamanoFilaUnica());
+        }
         mostrarCajas();
     }
 
     public void comenzarSimulacion() {
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> {
+        Timeline timeline = new Timeline();
+        KeyFrame frame = new KeyFrame(Duration.millis(100), e -> {
             boolean continuar = simulacion.simularMinuto();
             actualizarVista();
             if (!continuar) {
-                ((Timeline) e.getSource()).stop();
+                timeline.stop();
                 mostrarResumenFinal();
             }
-        }));
+        });
+        timeline.getKeyFrames().add(frame);
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
     }
@@ -122,5 +133,4 @@ public class ControladorSimulacion {
         resumen.setContentText(simulacion.getResumenEstadisticas());
         resumen.show();
     }
-
 }

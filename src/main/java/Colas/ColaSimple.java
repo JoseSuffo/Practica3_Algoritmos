@@ -69,6 +69,6 @@ public class ColaSimple <T>{
     }
 
     public boolean estaVacia(){
-        return fin == max-1;
+        return inicio==-1;
     }
 }
